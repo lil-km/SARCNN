@@ -24,6 +24,16 @@ class AWGN(object):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 
 
+# DEFINE PARAMETERS OF SPECKLE
+M = 10.089038980848645
+m = -1.429329123112601
+
+def normalize_sar(img):
+    return ((torch.log(img + np.spacing(1)) - m) * 255. / (M - m)).float()
+
+def denormalize_sar(img):
+    return torch.exp((M - m) * torch.clip(img.float(), 0., 1.) + m)
+
 """
 Author: emanuele dalsasso
 Estimate PSNR for SAR amplitude images

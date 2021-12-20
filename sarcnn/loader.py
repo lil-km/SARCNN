@@ -16,6 +16,9 @@ from random import randint
 import torch
 from torch.utils.data import Dataset
 
+from sarcnn.utils import normalize_sar
+
+
 class NoisyDataset(Dataset):
     def __init__(self, root_dir, std, mean, transform=None, shuffle=False):
         super(NoisyDataset, self).__init__()
@@ -25,10 +28,7 @@ class NoisyDataset(Dataset):
         self.transform = transform
         self.shuffle = shuffle
 
-        self.images_files = [
-            *root.glob('*.png'), *root.glob('*.jpg'),
-            *root.glob('*.jpeg'), *root.glob('*.bmp')
-        ]
+        self.images_files = [*root.glob('*.npy')]
 
     def __len__(self):
         return len(self.images_files)
@@ -50,14 +50,14 @@ class NoisyDataset(Dataset):
         img_path = self.images_files[idx]
 
         try:
-            img = Image.open(img_path).convert('L')
-            img = np.array(img)
+            img = np.load(img_path)
             img = torch.from_numpy(img)
             img = torch.unsqueeze(img, dim=0)
             img = img.float()
 
             img = self.transform(img)
 
+            img = normalize_sar(img)
             img = img / 255.
 
         except UnidentifiedImageError as corrupt_image_exceptions:

@@ -22,7 +22,7 @@ from torchvision import transforms as T
 
 from sarcnn.sarcnn import SARCNN
 from sarcnn.loader import NoisyDataset
-from sarcnn.utils import AWGN
+from sarcnn.utils import *
 
 # arguments parsing
 
@@ -123,7 +123,8 @@ for epoch in range(EPOCHS):
             t = time.time()
 
         clean = clean.to(device)
-        noise = torch.Tensor(clean.size()).normal_(mean=0, std=10/255.).to(device)
+        noise = torch.Tensor(clean.size()).normal_(mean=0, std=10).to(device)
+        noise = ((noise - m) / (M - m)).float()
         noisy = clean + noise
         loss = sarcnn(noisy, return_loss=True, x=clean)
         loss.backward()
@@ -142,7 +143,8 @@ for epoch in range(EPOCHS):
         if i % 100 == 0:
             # denoise the image
 
-            val_noise = torch.Tensor(clean_img.size()).normal_(mean=0, std=10/255.).to(device)
+            val_noise = torch.Tensor(clean_img.size()).normal_(mean=0, std=10).to(device)
+            val_noise = ((val_noise - m) / (M - m)).float()
             noisy_img = clean_img + val_noise
             clean_img_sarcnn = sarcnn.denoise(noisy_img)
 
@@ -150,12 +152,16 @@ for epoch in range(EPOCHS):
                 **log,
             }
 
-            compare_image = torch.cat((torch.unsqueeze(noisy_img[0], dim=0), torch.unsqueeze(clean_img_sarcnn[0], dim=0), torch.unsqueeze(clean_img[0], dim=0)), dim=0)
+            compare_image = torch.cat((
+                torch.unsqueeze(denormalize_sar(noisy_img)[0], dim=0),
+                torch.unsqueeze(denormalize_sar(clean_img_sarcnn)[0], dim=0),
+                torch.unsqueeze(denormalize_sar(clean_img)[0], dim=0)
+                ), dim=0)
 
             # save the image to wandb
             
-            grid = make_grid(compare_image, value_range=(0.0, 1.0), normalize=True)
-            ndarr = grid.mul(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
+            grid = make_grid(compare_image, normalize=False)
+            ndarr = grid.permute(1, 2, 0).to('cpu', torch.uint8).numpy()
             pil_image = Image.fromarray(ndarr)
 
             log['image'] = wandb.Image(pil_image, caption="Denoised image")
