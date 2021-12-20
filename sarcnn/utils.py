@@ -55,9 +55,9 @@ def injectspeckle_amplitude(img,L):
     ima_speckle_amplitude = np.multiply(img,s_amplitude)
     return ima_speckle_amplitude
 
-im = np.load('denoised_lely.npy')
-speckled_image = injectspeckle_amplitude(im,1)
-np.save('noisy_lely.npy',speckled_image)
+# im = np.load('denoised_lely.npy')
+# speckled_image = injectspeckle_amplitude(im,1)
+# np.save('noisy_lely.npy',speckled_image)
 
 
 

@@ -33,7 +33,7 @@ class SARCNN(nn.Module):
         image_channels=1,
         image_size=64
     ):
-        super(DnCNN, self).__init__()
+        super(SARCNN, self).__init__()
         layers = []
         
         layers.append(nn.Conv2d(in_channels=image_channels, out_channels=num_features, kernel_size=kernel_size, padding=padding, bias=True))

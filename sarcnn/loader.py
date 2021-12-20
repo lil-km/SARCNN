@@ -56,13 +56,9 @@ class NoisyDataset(Dataset):
             img = torch.unsqueeze(img, dim=0)
             img = img.float()
 
-            if self.transform:
-                img = self.transform(img)
-
-            img_y = img + self.std * torch.randn(img.shape) + self.mean
+            img = self.transform(img)
 
             img = img / 255.
-            img_y = img_y / 255.
 
         except UnidentifiedImageError as corrupt_image_exceptions:
             print(f"An exception occurred trying to load file {img_path}.")
@@ -71,4 +67,4 @@ class NoisyDataset(Dataset):
 
         # success
         
-        return img, img_y
+        return img
