@@ -28,8 +28,9 @@ class AWGN(object):
 M = 10.089038980848645
 m = -1.429329123112601
 
+
 def normalize_sar(img):
-    return ((torch.log(img + np.spacing(1)) - m) * 255. / (M - m)).float()
+    return ((torch.log(img + 0.2) - m) * 255. / (M - m)).float()
 
 def denormalize_sar(img):
     return torch.exp((M - m) * torch.clip(img.float(), 0., 1.) + m)

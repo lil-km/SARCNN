@@ -67,14 +67,14 @@ WANDB_NAME = args.wandb_name
 
 # create dataset and dataloader
 
-ds = NoisyDataset(root_dir=ROOT_DIR, std=1.0, mean=0.0, transform=train_img_transform(180, 40), shuffle=True)
+ds = NoisyDataset(root_dir=ROOT_DIR, std=.25, mean=0.0, transform=train_img_transform(180, 40), shuffle=True)
 
 assert len(ds) > 0, 'dataset is empty'
 print(f'{len(ds)} images found for training.')
 
 dl = DataLoader(ds, batch_size=BATCH_SIZE, shuffle=True, drop_last=False)
 
-ds_test = NoisyDataset(root_dir=ROOT_DIR, std=10.0, mean=0.0, transform=val_img_transform(180), shuffle=True)
+ds_test = NoisyDataset(root_dir=ROOT_DIR, std=.25, mean=0.0, transform=val_img_transform(180), shuffle=True)
 dl_test = DataLoader(ds_test, batch_size=BATCH_SIZE, shuffle=False, drop_last=False)
 
 clean_img = next(iter(dl_test))
@@ -123,8 +123,8 @@ for epoch in range(EPOCHS):
             t = time.time()
 
         clean = clean.to(device)
-        noise = torch.Tensor(clean.size()).normal_(mean=0, std=10).to(device)
-        noise = ((noise - m) / (M - m)).float()
+        noise = torch.Tensor(clean.size()).normal_(mean=0, std=.25).to(device)
+        noise = ((noise) / (M - m)).float()
         noisy = clean + noise
         loss = sarcnn(noisy, return_loss=True, x=clean)
         loss.backward()
@@ -143,8 +143,8 @@ for epoch in range(EPOCHS):
         if i % 100 == 0:
             # denoise the image
 
-            val_noise = torch.Tensor(clean_img.size()).normal_(mean=0, std=10).to(device)
-            val_noise = ((val_noise - m) / (M - m)).float()
+            val_noise = torch.Tensor(clean_img.size()).normal_(mean=0, std=.25).to(device)
+            val_noise = ((val_noise) / (M - m)).float()
             noisy_img = clean_img + val_noise
             clean_img_sarcnn = sarcnn.denoise(noisy_img)
 
