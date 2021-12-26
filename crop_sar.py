@@ -13,6 +13,10 @@ parser.add_argument('--step', type = int, help='step')
 
 args = parser.parse_args()
 
+pat_size = args.patch_size
+stride = args.stride
+step = args.step
+
 outputs_dir = Path(args.outputs_dir)
 outputs_dir.mkdir(parents = True, exist_ok = True)
 
@@ -21,6 +25,7 @@ image_files = [*path.glob('*.npy')]
 
 print(f"number of training data {len(image_files)}")
 
+count = 0
 for f in image_files:
     img = np.load(f)
     H, W = img.shape
@@ -30,3 +35,6 @@ for f in image_files:
             patch = img[x:x + pat_size, y:y + pat_size]
             patch_name = f"{f.stem}_{x}_{y}.npy"
             np.save(outputs_dir / patch_name, patch)
+            count += 1
+
+print(f"{count} patches are saved")
