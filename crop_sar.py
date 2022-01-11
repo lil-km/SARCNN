@@ -2,6 +2,7 @@ from pathlib import Path
 
 import argparse
 import numpy as np
+import os
 
 parser = argparse.ArgumentParser()
 
@@ -20,10 +21,16 @@ step = args.step
 outputs_dir = Path(args.outputs_dir)
 outputs_dir.mkdir(parents = True, exist_ok = True)
 
+# for dirpath, dirnames, filenames in os.walk(args.inputs_dir):
+#     structure = os.path.join(outputs_dir, dirpath[len(args.inputs_dir):])
+
+#     if not os.path.isdir(structure):
+#         os.mkdir(structure)
+
 path = Path(args.inputs_dir)
 image_files = [*path.glob('*.npy')]
 
-print(f"number of training data {len(image_files)}")
+print(f"number of data {len(image_files)} in {args.inputs_dir}")
 
 count = 0
 for f in image_files:
@@ -33,8 +40,8 @@ for f in image_files:
     for x in range(0 + step, H - pat_size, stride):
         for y in range(0 + step, W - pat_size, stride):
             patch = img[x:x + pat_size, y:y + pat_size]
-            patch_name = f"{f.stem}_{x}_{y}.npy"
-            np.save(outputs_dir / patch_name, patch)
+            patch_name = f"{f.stem}_{count}.npy"
+            np.save(Path(outputs_dir) / patch_name, patch)
             count += 1
 
 print(f"{count} patches are saved")

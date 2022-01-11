@@ -23,6 +23,55 @@ class AWGN(object):
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 
+class SPECKLE(object):
+    def __init__(self, L):
+        self.num_of_look = L
+        
+    def __call__(self, tensor):
+        rows, columns = tensor.size()
+        s = torch.zeros((rows, columns))
+        for k in range(0, L):
+            gamma = torch.abs(torch.randn((rows, columns)) + torch.randn((rows, columns))*1j )**2/2
+            s = s + gamma
+
+        s_amplitude = torch.sqrt(s/L)
+        ima_speckle_amplitude = torch.multiply(tensor, s_amplitude)
+        return ima_speckle_amplitude
+    
+    def __repr__(self):
+        return self.__class__.__name__ + '(number of look={0})'.format(self.num_of_look)
+
+
+class RandomRot90(torch.nn.Module):
+    """Horizontally flip the given image randomly with a given probability.
+    If the image is torch Tensor, it is expected
+    to have [..., H, W] shape, where ... means an arbitrary number of leading
+    dimensions
+
+    Args:
+        p (float): probability of the image being flipped. Default value is 0.5
+    """
+
+    def __init__(self, p=0.5):
+        super().__init__()
+        self.p = p
+
+    def forward(self, img):
+        """
+        Args:
+            img (PIL Image or Tensor): Image to be flipped.
+
+        Returns:
+            PIL Image or Tensor: Randomly flipped image.
+        """
+
+        if not isinstance(img, torch.Tensor):
+           img = torch.from_numpy(np.array(img))
+
+        if torch.rand(1) < self.p:
+            return torch.rot90(img, torch.randint(low=0,high=4,size=(1,)).item(), (1, 2))
+        return img
+
 
 # DEFINE PARAMETERS OF SPECKLE
 M = 10.089038980848645
@@ -40,12 +89,22 @@ Author: emanuele dalsasso
 Estimate PSNR for SAR amplitude images
 """
 
-def psnr(Shat, S):
+def cal_psnr(Shat, S):
     # Shat: a SAR amplitude image
     # S:    a reference SAR image
-    P = np.quantile(S, 0.99)
-    res = 10 * np.log10((P ** 2) / np.mean(np.abs(Shat - S) ** 2))
+    P = torch.quantile(S, 0.99)
+    res = 10 * torch.log10((P ** 2) / torch.mean(torch.abs(Shat - S) ** 2))
     return res
+
+
+def dynamic_clamp(image, threshold=None):
+    if threshold == None:
+        threshold = torch.mean(image) + 3*torch.std(image)
+
+    image = torch.clip(image, 0, threshold)
+    image = image/threshold*255
+    return image
+
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -55,15 +114,14 @@ Created on Wed Apr  4 13:12:23 2018
 @author: emasasso
 """
 
-def injectspeckle_amplitude(img,L):
-    rows = img.shape[0]
-    columns = img.shape[1]
-    s = np.zeros((rows, columns))
-    for k in range(0,L):
-        gamma = np.abs( np.random.randn(rows,columns) + np.random.randn(rows,columns)*1j )**2/2
+def inject_speckle_amplitude(img, L):
+    rows, columns = img.shape[1], img.shape[2]
+    s = torch.zeros((rows, columns))
+    for k in range(0, L):
+        gamma = torch.abs(torch.randn((rows, columns)) + torch.randn((rows, columns))*1j )**2/2
         s = s + gamma
-    s_amplitude = np.sqrt(s/L)
-    ima_speckle_amplitude = np.multiply(img,s_amplitude)
+    s_amplitude = torch.sqrt(s/L)
+    ima_speckle_amplitude = torch.multiply(img, s_amplitude)
     return ima_speckle_amplitude
 
 # im = np.load('denoised_lely.npy')

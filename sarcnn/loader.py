@@ -16,15 +16,13 @@ from random import randint
 import torch
 from torch.utils.data import Dataset
 
-from sarcnn.utils import normalize_sar
+from sarcnn.utils import normalize_sar, inject_speckle_amplitude
 
 
 class NoisyDataset(Dataset):
-    def __init__(self, root_dir, std, mean, transform=None, shuffle=False):
+    def __init__(self, root_dir, transform=None, shuffle=False):
         super(NoisyDataset, self).__init__()
         root = Path(root_dir)
-        self.std = std
-        self.mean = mean
         self.transform = transform
         self.shuffle = shuffle
 
@@ -55,10 +53,16 @@ class NoisyDataset(Dataset):
             img = torch.unsqueeze(img, dim=0)
             img = img.float()
 
-            img = self.transform(img)
+            if self.transform:
+                img = self.transform(img)
+
+            speckle_img = inject_speckle_amplitude(img, 1)
 
             img = normalize_sar(img)
             img = img / 255.
+
+            speckle_img = normalize_sar(speckle_img)
+            speckle_img = speckle_img / 255.
 
         except UnidentifiedImageError as corrupt_image_exceptions:
             print(f"An exception occurred trying to load file {img_path}.")
@@ -67,4 +71,4 @@ class NoisyDataset(Dataset):
 
         # success
         
-        return img
+        return img, speckle_img
