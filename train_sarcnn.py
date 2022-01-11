@@ -76,15 +76,15 @@ PERCEPTUAL = args.perceptual_loss
 
 # split the data
 
-# images_files = os.listdir(TRAIN_DIR)
-# VAL_DIR = os.path.join(TRAIN_DIR[:-8], 'val')
-VAL_DIR = "/content/sar_dataset/cropped/test"
+images_files = os.listdir(TRAIN_DIR)
+VAL_DIR = os.path.join(TRAIN_DIR[:-8], 'val')
+# VAL_DIR = "/content/sar_dataset/cropped/test"
 
-# if not os.path.isdir(VAL_DIR):
-#     os.mkdir(VAL_DIR)
+if not os.path.isdir(VAL_DIR):
+    os.mkdir(VAL_DIR)
 
-#     for file_name in random.sample(images_files, int(len(images_files)*0.03)):
-#         shutil.move(os.path.join(TRAIN_DIR, file_name), VAL_DIR)
+    for file_name in random.sample(images_files, int(len(images_files)*0.03)):
+        shutil.move(os.path.join(TRAIN_DIR, file_name), VAL_DIR)
 
 # create dataset and dataloader
 

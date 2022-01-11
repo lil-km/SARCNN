@@ -21,27 +21,27 @@ step = args.step
 outputs_dir = Path(args.outputs_dir)
 outputs_dir.mkdir(parents = True, exist_ok = True)
 
-# for dirpath, dirnames, filenames in os.walk(args.inputs_dir):
-#     structure = os.path.join(outputs_dir, dirpath[len(args.inputs_dir):])
+for dirpath, dirnames, filenames in os.walk(args.inputs_dir):
+    structure = os.path.join(outputs_dir, dirpath[len(args.inputs_dir):])
 
-#     if not os.path.isdir(structure):
-#         os.mkdir(structure)
+    if not os.path.isdir(structure):
+        os.mkdir(structure)
 
-path = Path(args.inputs_dir)
-image_files = [*path.glob('*.npy')]
+        path = Path(dirpath)
+        image_files = [*path.glob('*.npy')]
 
-print(f"number of data {len(image_files)} in {args.inputs_dir}")
+        print(f"number of data {len(image_files)} in {dirpath}")
 
-count = 0
-for f in image_files:
-    img = np.load(f)
-    H, W = img.shape
-    # make patches from the image
-    for x in range(0 + step, H - pat_size, stride):
-        for y in range(0 + step, W - pat_size, stride):
-            patch = img[x:x + pat_size, y:y + pat_size]
-            patch_name = f"{f.stem}_{count}.npy"
-            np.save(Path(outputs_dir) / patch_name, patch)
-            count += 1
+        count = 0
+        for f in image_files:
+            img = np.load(f)
+            H, W = img.shape
+            # make patches from the image
+            for x in range(0 + step, H - pat_size, stride):
+                for y in range(0 + step, W - pat_size, stride):
+                    patch = img[x:x + pat_size, y:y + pat_size]
+                    patch_name = f"{f.stem}_{count}.npy"
+                    np.save(Path(structure) / patch_name, patch)
+                    count += 1
 
-print(f"{count} patches are saved")
+        print(f"{count} patches are saved")
