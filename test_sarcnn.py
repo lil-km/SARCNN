@@ -9,6 +9,7 @@ SARCNN: Deep Neural Convolutional Network for SAR Images Despeckling model testi
 
 import argparse
 import time
+import os
 import numpy as np
 
 from pathlib import Path
@@ -17,13 +18,16 @@ import torch
 from PIL import Image
 
 from sarcnn.sarcnn import SARCNN
+from sarcnn.utils import *
 
 # arguments parsing
 
 parser = argparse.ArgumentParser(description='SARCNN Testing')
-parser.add_argument('--image_path', type=str, required=True, help='test image path')
 parser.add_argument('--model_path', type=str, required=True, help='pretrained model path')
-parser.add_argument('--output_folder', type=str, required=True, help='output folder')
+parser.add_argument('--real_sar', dest='real_sar', action='store_true', help='real sar images flag')
+parser.add_argument('--test_data', type=str, required=True, help='test data folder')
+parser.add_argument('--test_dir', type=str, required=True, help='output folder')
+parser.add_argument('--filename', type=str, required=True, help='test image filename')
 
 args = parser.parse_args()
 
@@ -32,30 +36,29 @@ args = parser.parse_args()
 def exists(val):
     return val is not None
 
-def load_image(path):
-    img = Image.open(path).convert('L')
-    img = np.array(img)
-    img = torch.from_numpy(img)
-    img = torch.unsqueeze(img, dim=0)
-    img = img.float()
-    img = torch.unsqueeze(img, dim=0)
-    img = img / 255.
-    return img
-
-def save_image(path, img):
-    img = img.detach().cpu().numpy()
-    img = np.squeeze(img)
-    img = np.clip(img, 0, 1)
-    img = img * 255.
-    img = img.astype(np.uint8)
-    img = Image.fromarray(img)
-    img.save(path+'sarcnn_output.jpg')
-
 # constants
 
-IMAGE_PATH = args.image_path
 MODEL_PATH = args.model_path
-OUTPUT_FOLDER = args.output_folder
+REAL_SAR = args.real_sar
+TEST_DATA = args.test_data
+TEST_DIR = args.test_dir
+FILENAME = args.filename
+
+TEST_DIR = Path(TEST_DIR)
+TEST_DIR.mkdir(parents = True, exist_ok = True)
+
+
+def denoiser_test(model, device):
+    if REAL_SAR:
+        test_folder = TEST_DATA+"/real"
+        test_files = glob((test_folder+f'/{FILENAME}*.npy').format('float32'))
+        sarcnn.test(test_files, save_dir=TEST_DIR, dataset_dir=test_data, device=device, real_sar=REAL_SAR)
+    else:
+        test_folder = TEST_DATA+"/simulated"
+        test_files = glob((test_folder+f'/{FILENAME}*.npy').format('float32'))
+        psnr, ssim = sarcnn.test(test_files, save_dir=TEST_DIR, dataset_dir=test_data, device=device, real_sar=REAL_SAR)
+
+        return psnr, ssim
 
 # load SARCNN model
 
@@ -68,9 +71,9 @@ if exists(MODEL_PATH):
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-noisy_img = load_image(IMAGE_PATH)
-noisy_img = noisy_img.to(device)
-
-sarcnn_clean_img = sarcnn.denoise(noisy_img)
-
-save_image(OUTPUT_FOLDER, sarcnn_clean_img)
+if REAL_SAR:
+    denoiser_test(sarcnn, device)
+else:
+    psnr, ssim = denoiser_test(sarcnn, device)
+    print(psnr)
+    print(ssim)

@@ -13,7 +13,7 @@ class PERCEPTUAL_LOSS(nn.Module):
         # Load the VGG19 model trained on the ImageNet dataset.
         vgg19_model = vgg19(pretrained=True).eval()
         # Extract the thirty-sixth layer output in the VGG19 model as the perceptual loss.
-        self.feature_extractor = nn.Sequential(*list(vgg19_model.features.children())[:35])
+        self.feature_extractor = nn.Sequential(*list(vgg19_model.features.children())[:8])
         # Freeze model parameters.
         for parameters in self.feature_extractor.parameters():
             parameters.requires_grad = False

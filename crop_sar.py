@@ -1,8 +1,19 @@
+"""
+Project: sarcnn
+Author: khalil MEFTAH
+Date: 2021-12-20
+SARCNN: Deep Neural Convolutional Network for SAR Images Despeckling model testing implementation
+"""
+
+# imports
+
 from pathlib import Path
 
 import argparse
 import numpy as np
 import os
+
+# arguments parsing
 
 parser = argparse.ArgumentParser()
 
